@@ -1,0 +1,14 @@
+{
+  "source": "https://developers.beehiiv.com/docs/v2/openapi/api-reference.json",
+  "checked": "2026-10-02",
+  "apiVersion": "v2",
+  "documentVersion": "1.0.0",
+  "sha256": "562ca1123c5cde215b3d884213dd22b7440323b4ac5ff36da982e53cf80b4e53",
+  "operationCount": 116,
+  "corrections": [
+    "Post creation requires exactly one of blocks/body_content, defaults status=draft and refuses scheduling a draft; partial updates require a nonempty body and also refuse both content methods.",
+    "Header value null suppresses an inherited header per official prose, although the snapshot only types values as strings. Nullable string header values are accepted as a reviewed correction.",
+    "Cursor aggregate controls are offered only where the operation schema exposes cursor. Offset page remains an explicit deprecated API input, bounded to page 100; do not assume every operation supports cursor from the general guide.",
+    "Existing documented legacy tool names are retained where their endpoints exist. Email-in-path inputs use target_email when a body also has email, avoiding accidental target/update collisions."
+  ]
+}

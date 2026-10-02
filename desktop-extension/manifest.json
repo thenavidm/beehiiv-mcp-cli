@@ -1,0 +1,85 @@
+{
+  "manifest_version": "0.2",
+  "name": "beehiiv",
+  "display_name": "Beehiiv",
+  "version": "2.0.0",
+  "description": "Beehiiv MCP server with 117 tools for publications, subscriptions, posts, statistics, automations, webhooks, referral programs and API v2.",
+  "long_description": "Requires eligible Beehiiv API v2 access. Use a private API key or your own registered OAuth integration. All 47 writes require explicit confirmation; read-only exposes 70 reads. Post creation defaults to draft and reports asynchronous processing. API plan/scope permissions apply. Credentials are never bundled.",
+  "author": {
+    "name": "Navid Moazzez",
+    "url": "https://navid.me"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/thenavidm/beehiiv-mcp-cli"
+  },
+  "homepage": "https://github.com/thenavidm/beehiiv-mcp-cli",
+  "documentation": "https://github.com/thenavidm/beehiiv-mcp-cli/blob/main/INSTALL.md",
+  "support": "https://github.com/thenavidm/beehiiv-mcp-cli/issues",
+  "license": "AGPL-3.0-or-later",
+  "keywords": [
+    "beehiiv",
+    "newsletter",
+    "email-marketing",
+    "subscribers",
+    "publications",
+    "mcp",
+    "cli",
+    "claude-desktop"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "server/index.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/server/index.js"
+      ],
+      "env": {
+        "BEEHIIV_API_KEY": "${user_config.api_key}",
+        "BEEHIIV_TOKENS_FILE": "${user_config.tokens_file}",
+        "BEEHIIV_READ_ONLY": "${user_config.read_only}",
+        "BEEHIIV_ALLOW_DESTRUCTIVE": "${user_config.allow_destructive}"
+      }
+    }
+  },
+  "user_config": {
+    "api_key": {
+      "type": "string",
+      "title": "Beehiiv API v2 key",
+      "description": "Private API key from Workspace Settings > API. Leave empty when using an OAuth token file. Never an account password.",
+      "required": false,
+      "sensitive": true
+    },
+    "tokens_file": {
+      "type": "string",
+      "title": "Private OAuth token file",
+      "description": "Optional absolute path to your own private authorized Beehiiv OAuth JSON. Never bundle this file.",
+      "required": false
+    },
+    "read_only": {
+      "type": "boolean",
+      "title": "Read only",
+      "description": "Hide/refuse all 47 writes, leaving 70 reads.",
+      "default": false,
+      "required": false
+    },
+    "allow_destructive": {
+      "type": "boolean",
+      "title": "Allow confirmed audience and delivery changes",
+      "description": "If disabled, refuse all 47 writes even when confirmed.",
+      "default": true,
+      "required": false
+    }
+  },
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=22"
+    }
+  }
+}
