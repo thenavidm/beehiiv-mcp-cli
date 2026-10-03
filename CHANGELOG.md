@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+Use the native terminal capture at 1040 source pixels with lossless GIF optimization, displayed at 520 pixels, matching the Bluesky/Substack reference. Original assets remain available.
+
 Semantic versions; newest first. npm, manifest and annotated release tags agree.
 
 ## 2.0.0 - 2026-10-02
