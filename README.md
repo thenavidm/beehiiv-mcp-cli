@@ -2573,7 +2573,7 @@ Open an [issue](https://github.com/thenavidm/beehiiv-mcp-cli/issues) with the ve
 
 ## About the author
 
-Navid Moazzez is a leading AI business strategist, and the host of the AI Creator Summit, watched by 100,000+ creators. He helps creators and founders master AI and build their own AI Operating System (AI OS) to automate their business and life. This Beehiiv MCP server and CLI is one piece of that system.
+Navid Moazzez is a leading AI business strategist, and the host of the AI Creator Summit, watched by 100,000+ creators. He helps creators and founders master AI and build their own AI Operating System (AI OS) to automate their business and life. He creates useful free tools, MCP servers and CLIs that creators and founders can use in their own workflows.
 
 **Links**
 
@@ -2601,4 +2601,4 @@ AGPL-3.0-or-later, preserving the existing source license. See [LICENSE](LICENSE
 
 ---
 
-© 2026 [Navid Media](https://navid.media). Made with ❤️ by [Navid Moazzez](https://navid.me).
+© 2026 [Navid Media](https://navid.media?utm_source=github&utm_medium=referral&utm_campaign=beehiiv-mcp-cli&utm_content=readme). Made with ❤️ by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=beehiiv-mcp-cli&utm_content=readme).
