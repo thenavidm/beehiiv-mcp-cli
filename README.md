@@ -2455,10 +2455,10 @@ Pin a reviewed version instead of @latest if your automation requires reproducib
 
 | Component | Version / source |
 | --- | --- |
-| Package and desktop manifest | 3.0.0 |
+| Package and desktop manifest | 3.0.1 |
 | Runtime | Node 22 or newer |
 | Beehiiv API | v2; 116 pinned operations, reviewed 2026-10-02 |
-| Slipway | 0.1.13 |
+| Slipway | 0.1.17 |
 | MCP TypeScript SDK, through Slipway | 2.3.0 |
 | Source provenance | api-source.json with exact source hash and reviewed corrections |
 
