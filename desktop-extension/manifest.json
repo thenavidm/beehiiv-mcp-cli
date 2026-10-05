@@ -2,7 +2,7 @@
   "manifest_version": "0.2",
   "name": "beehiiv",
   "display_name": "Beehiiv",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "description": "Beehiiv MCP server with 117 tools for publications, subscriptions, posts, statistics, automations, webhooks, referral programs and API v2.",
   "long_description": "Requires eligible Beehiiv API v2 access. Use a private API key or your own registered OAuth integration. All 47 writes require explicit confirmation; read-only exposes 70 reads. Post creation defaults to draft and reports asynchronous processing. API plan/scope permissions apply. Credentials are never bundled.",
   "author": {

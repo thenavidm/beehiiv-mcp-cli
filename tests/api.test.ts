@@ -1,18 +1,21 @@
 import {describe,it,expect,vi} from "vitest";
 import {mkdtemp,writeFile,readFile,stat} from "node:fs/promises";
 import {tmpdir} from "node:os";import{join}from"node:path";
-import{Client}from"@modelcontextprotocol/sdk/client/index.js";
-import{InMemoryTransport}from"@modelcontextprotocol/sdk/inMemory.js";
+import{connect}from"@thenavidm/slipway/testing";
 import{loadConfig}from"../src/config.js";import{BeehiivClient}from"../src/api/client.js";
-import{buildServer}from"../src/server.js";import{ALL_TOOLS}from"../src/tools/index.js";
+import{createApp}from"../src/app.js";import{ALL_TOOLS,compileAll}from"../src/tools/index.js";
 const PUB="pub_00000000-0000-0000-0000-000000000000";const POST="post_00000000-0000-0000-0000-000000000000";
 const key="private-fixture-key-not-a-real-credential";
 function json(body:unknown,status=200,headers:Record<string,string>={}){return new Response(JSON.stringify(body),{status,headers:{"Content-Type":"application/json",...headers}});}
+// The real Slipway server with an injected client, so the network stays a stub. A call to a hidden tool is a
+// protocol error rather than a tool result; both are refusals a client sees.
 async function harness(fetcher:typeof fetch,env:NodeJS.ProcessEnv={}){
- const config=loadConfig({BEEHIIV_API_KEY:key,BEEHIIV_MIN_REQUEST_INTERVAL_MS:"1",...env});const api=new BeehiivClient(config,fetcher,async()=>{});const server=buildServer(config,api);const client=new Client({name:"test",version:"1"});const[a,b]=InMemoryTransport.createLinkedPair();await server.connect(a);await client.connect(b);
- return {client,api,close:()=>client.close(),call:async(name:string,args:Record<string,unknown>={})=>{const r=await client.callTool({name,arguments:args});return{error:r.isError===true,value:JSON.parse((r.content as{type:string;text:string}[])[0].text)}}};
+ const settings={BEEHIIV_API_KEY:key,BEEHIIV_MIN_REQUEST_INTERVAL_MS:"1",...env};const config=loadConfig(settings);const api=new BeehiivClient(config,fetcher,async()=>{});
+ const mcp=await connect(createApp({context:()=>({config,client:api})}),{env:settings});
+ return {client:{listTools:async()=>({tools:await mcp.listTools()})},api,close:()=>mcp.close(),call:async(name:string,args:Record<string,unknown>={})=>{try{const r=await mcp.callTool(name,args);return{error:r.isError===true,value:JSON.parse((r.content as{type:string;text:string}[])[0].text)};}catch(e){return{error:true,value:{error:(e as Error).message}};}}};
 }
 describe("current Beehiiv request and safety behavior",()=>{
+ it("compiles every input and body schema with the native validator",()=>expect(compileAll()).toBe(ALL_TOOLS.length));
  it("discovers 117 tools and 70 reads without account auth",async()=>{const f=vi.fn();const h=await harness(f,{BEEHIIV_API_KEY:""});try{const t=(await h.client.listTools()).tools;expect(t).toHaveLength(117);expect(t.filter(t=>t.annotations?.readOnlyHint)).toHaveLength(70);expect(t.filter(t=>t.annotations?.destructiveHint)).toHaveLength(47);expect(f).not.toHaveBeenCalled();}finally{await h.close();}});
  it("read-only hides writes and refuses a direct hidden call",async()=>{const f=vi.fn();const h=await harness(f,{BEEHIIV_READ_ONLY:"1"});try{expect((await h.client.listTools()).tools).toHaveLength(70);expect((await h.call("create_post",{publication_id:PUB,title:"Draft",body_content:"<p>Draft</p>",confirm:true})).error).toBe(true);expect(f).not.toHaveBeenCalled();}finally{await h.close();}});
  it("confirmation and destructive policy gate every write before HTTP",async()=>{for(const env of[{}, {BEEHIIV_ALLOW_DESTRUCTIVE:"0"}]){const f=vi.fn();const h=await harness(f,env);try{expect((await h.call("create_post",{publication_id:PUB,title:"Draft",body_content:"<p>Draft</p>",confirm:env.BEEHIIV_ALLOW_DESTRUCTIVE?true:false})).error).toBe(true);expect(f).not.toHaveBeenCalled();}finally{await h.close();}}});

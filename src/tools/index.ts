@@ -5,7 +5,7 @@ import { readFile, lstat } from "node:fs/promises";
 import type { Json, BeehiivClient } from "../api/client.js";
 import { UsageError } from "../api/errors.js";
 import type { Config } from "../config.js";
-import type { Risk } from "../safety.js";
+import type { Risk } from "@thenavidm/slipway";
 export type Operation={name:string;title:string;description:string;method:string;path:string;group:string;risk:Risk;oauthOnly:boolean;params:{name:string;key:string;in:string;required?:boolean;schema:Json}[];bodySchema:Json};
 export type ToolSpec={name:string;title:string;description:string;group:string;inputSchema:Json;risk:Risk;handler:(args:Json,client:BeehiivClient)=>Promise<unknown>};
 const operations=operationsData as unknown as Operation[];
@@ -70,6 +70,10 @@ async function execute(op:Operation,args:Json,client:BeehiivClient):Promise<unkn
 }
 export const ALL_TOOLS:ToolSpec[]=operations.map(op=>({name:op.name,title:op.title,description:op.description,group:op.group,inputSchema:fieldsFor(op),risk:op.risk,handler:(args,client)=>execute(op,args,client)}));
 ALL_TOOLS.push({name:"list_accounts",title:"List configured accounts",description:"List private account labels and configured auth methods, without returning credentials or token-file paths. Does not contact Beehiiv.",group:"accounts",risk:"read",inputSchema:{type:"object",properties:{},additionalProperties:false},handler:async(_args,client)=>({accounts:client.config.accounts.map(a=>({name:a.name,default:a.name===client.config.defaultAccount,auth:a.tokensFile||a.accessToken?"oauth":a.apiKey?"api_key":"not_configured"}))})});
-const validators=new Map(ALL_TOOLS.map(t=>[t.name,ajv.compile(t.inputSchema)]));
-export function validateArguments(tool:ToolSpec,args:Json):void {check(validators.get(tool.name)!,args);}
+// Each schema compiles on first use: compiling all of them at load held back the server's first answer. compileAll() runs them in tests.
+const validators=new Map<string,ValidateFunction>();
+function validatorFor(tool:ToolSpec):ValidateFunction {let v=validators.get(tool.name);if(!v){v=ajv.compile(tool.inputSchema);validators.set(tool.name,v);}return v;}
+export function validateArguments(tool:ToolSpec,args:Json):void {check(validatorFor(tool),args);}
+/** Compile every input and body schema, as loading once did, so a test can prove they all compile. */
+export function compileAll():number {for(const t of ALL_TOOLS)validatorFor(t);for(const op of operations)ajv.compile(op.bodySchema);return validators.size;}
 export function visibleTools(config:Config):ToolSpec[] {return ALL_TOOLS.filter(t=>!config.readOnly||t.risk==="read");}

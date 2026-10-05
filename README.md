@@ -13,7 +13,7 @@ Beehiiv MCP server and CLI for Claude Code, Codex and AI agents. **117 tools: 70
 
 One package gives you two ways in: beehiiv-mcp connects the tools to your AI app, and beehiiv-cli makes the same tools shell commands. Claude Desktop also has a bundled .mcpb extension.
 
-Built and maintained by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=beehiiv-mcp-cli&utm_content=readme). Complete installation and private account setup are in [INSTALL.md](INSTALL.md).
+Built and maintained by [Navid Moazzez](https://navid.me?utm_source=github&utm_medium=referral&utm_campaign=beehiiv-mcp-cli&utm_content=readme). Built on [Slipway](https://github.com/thenavidm/slipway), which turns one definition of each tool into the MCP server and the CLI. Complete installation and private account setup are in [INSTALL.md](INSTALL.md).
 
 <img src="https://cdn.navid.me/repos/beehiiv-mcp-cli-retina.gif" alt="Illustrated Beehiiv workflow in the same house terminal used on navid.me" width="520">
 
@@ -21,7 +21,7 @@ The terminal illustrates shipped tools and the draft workflow. It is a presentat
 
 You need a private Beehiiv API key or your own authorized OAuth integration. Endpoint plan/scope permissions apply; Send API creation requires eligible Pro/Enterprise access. The community wrapper preserves AGPL-3.0-or-later licensing; Beehiiv service charges remain separate. This is not a Beehiiv-endorsed product.
 
-Beehiiv already has an official account MCP and a separate documentation MCP. A community task CLI also exists. The comparison below records their scopes; this package makes no unsupported claim of broader coverage or measured efficiency.
+Beehiiv already has an official account MCP and a separate documentation MCP. A community task CLI also exists. The comparison below records their scopes; this package claims no broader coverage, and section 7 has its measured token costs.
 
 ## Two ways to use it
 
@@ -77,7 +77,7 @@ Then ask: *"Show the publications I can access. Read the latest posts in the pub
 | 4 | [Connect your client](#4-connect-your-client) | Clients and OS routes |
 | 5 | [Check it works](#5-check-it-works) | Doctor and first read |
 | 6 | [Output, flags and exit codes](#6-output-flags-and-exit-codes) | Scripts, JSON and stable exit codes |
-| 7 | [MCP or CLI and token cost](#7-mcp-or-cli-and-token-cost) | Actual measurement method |
+| 7 | [MCP or CLI and token cost](#7-mcp-or-cli-and-token-cost) | Measured in Claude Code and Codex, and how to spend less |
 | 8 | [Every tool and argument](#8-every-tool-and-argument) | All 117 tools and arguments |
 | 9 | [Newsletter and subscription workflows](#9-newsletter-and-subscription-workflows) | Drafts, sending and audience work |
 | 10 | [Pagination, exports and webhooks](#10-pagination-exports-and-webhooks) | Cursor/offset pagination and callbacks |
@@ -104,7 +104,7 @@ Then ask: *"Show the publications I can access. Read the latest posts in the pub
 
 The snapshot contains 116 operations plus the local account helper: **117 tools, 70 reads and 47 confirmed writes**. Areas include publications, posts, subscriptions, automations, custom fields, segments, polls, referral programs, tiers, webhooks, ad offers, analytics, newsletter lists, exports and privacy requests. Plan and OAuth scope requirements apply to each operation.
 
-**Checked:** build/typecheck, 29 fixture/shared-CLI checks and real local discovery. Live account sends, desktop GUI installation and fresh token/task measurements remain pending. API coverage does not imply full Beehiiv UI or official MCP feature parity.
+**Checked:** build/typecheck, 31 tests and real local discovery. Live account sends and desktop GUI installation remain unverified; section 7 has the measured token costs. API coverage does not imply full Beehiiv UI or official MCP feature parity.
 
 ## 2. Quick install
 
@@ -200,7 +200,7 @@ beehiiv-cli get-post --publication-id pub_00000000-0000-0000-0000-000000000000 -
 | `--help` | Current schema-derived arguments and defaults |
 | `--json` | Structured JSON output |
 | `--compact` | Compact JSON on one line |
-| `--agent` | JSON, compact, no prompts or color |
+| `--agent` | Compact JSON and no prompts; never confirms a write |
 | `--select a,b.c` | Keep selected fields; dotted paths descend through objects and arrays |
 | `--no-color` | No terminal colors |
 | `--no-input` | No interactive prompts |
@@ -224,7 +224,8 @@ Use an actual JSON null in `payload` for nullable values. A shell `--field null`
 | Code | Meaning |
 | --- | --- |
 | 0 | Success |
-| 2 | Invalid arguments or refused write |
+| 1 | Unexpected error |
+| 2 | Invalid arguments or refused write, an unknown command or a hidden write |
 | 3 | Resource not found |
 | 4 | Authentication or permission failure |
 | 5 | Other API/transport failure |
@@ -235,18 +236,49 @@ Results go to stdout; errors are JSON on stderr. `--select` controls local resul
 
 ## 7. MCP or CLI and token cost
 
-Both surfaces call the same 117 tools through the MCP SDK's in-memory transport. The CLI does not implement a second HTTP client. A stdio client connects to beehiiv-mcp; scripts use beehiiv-cli; Claude Desktop uses the bundle. Browser-only remote clients need the official hosted MCP.
+Both surfaces are the same program with the same 117 tools. The difference is
+when the model pays for them. Measured in Claude Code:
 
-| Measurement | MCP | CLI |
-| --- | --- | --- |
-| Eager full-schema loading | Pending actual usage | Include skill discovery text |
-| Default/deferred discovery | Pending actual usage | Include skill discovery text |
-| One-time skill read | Selected schemas/results still count | Pending actual usage |
-| Complete equivalent task | Include discovery, calls, reasoning, results and retries | Include help/schema, commands, reasoning, results and retries |
+| Cost | MCP server | CLI |
+|---|---|---|
+| Every message, with every tool loaded | 138,000 tokens | nothing |
+| Every message, Claude Code's default | 2,000 tokens | nothing |
+| When Beehiiv comes up | nothing more, or the tools it picks | 1,400 tokens for `SKILL.md`, once |
 
-Fresh Claude Code standing-context and matched-task measurements are not available for this release yet. No estimate or borrowed efficiency percentage is substituted. Record client/model/package versions, date, settings and API usage. Use the same authorized publication, result fields and success criteria. Compare latest-post summaries across the official MCP/community CLI where supported; compare draft creation only on an eligible test account without sending email.
+Claude Code's [tool search](https://code.claude.com/docs/en/mcp#scale-with-mcp-tool-search)
+is on by default: it sends only the tool names and the server instructions,
+and loads a tool's full definition when the model reaches for it. An app that
+loads every tool up front pays the first line on every message, and most of it
+is the four post tools: a post body can hold 33 kinds of block, each written
+once under `$defs`, about 40 KB per tool.
 
-Deferred MCP tool search can reduce standing schema context. --select reduces result text. Neither is proof of lower full-task cost, and API plan/service costs remain separate.
+To spend less, `BEEHIIV_READ_ONLY=1` leaves the 70 reads, and `--select` keeps
+only the fields you name from a result. Or install the CLI and add the server
+on the days it earns its place.
+
+Measured on 2026-10-05 with Claude Code 2.1.286 on Claude Opus 5.5: one short
+prompt with and without the server connected, once with
+`ENABLE_TOOL_SEARCH=false` and once with the default, the difference read from
+the API's own usage figures. `SKILL.md` was measured the same way. Other apps
+and models count tokens a little differently.
+
+Against 2.0.1, measured the same day: every tool loaded costs 138,012 tokens
+instead of 655,428, because 2.0.1 spelled each block's parts out wherever they
+appeared, twice per post tool, and 3.0.0 writes each repeated part once. Tool
+search is the same within 2 tokens (2,011 against 2,010), and `SKILL.md` costs
+60 more, because it now says how approval works over MCP and lists every exit
+code. In Codex 0.159.3 on gpt-6.1-sol, the same task, "find the command that
+creates a draft post, and the flags it requires", read a median of 84,440
+input tokens on 3.0.0 against 86,352 on 2.0.1 over the CLI, five runs each:
+every 3.0.0 run asked `which` (208 characters) where 2.0.1's read the full
+command list (9,966). Two 2.0.1 runs stopped on a provider capacity error, so
+the CLI medians use pairs 1, 4, 5, 6 and 7. Over MCP, Codex prints its own
+TypeScript rendering of the tool list and cuts it to about 10,000 tokens. That
+rendering is 907 tokens longer on 3.0.0, 61,486 against 60,579: in the part
+Codex kept, 2.0.1's reads `unknown` six times, for lists of segment and tier
+IDs nested four levels deep in the post tools, and 3.0.0's spells every type
+out. The input totals carry that difference, a median of 77,584 against
+77,354.
 
 ## 8. Every tool and argument
 
@@ -374,7 +406,7 @@ The following tools and argument tables come from actual MCP discovery. API path
 
 ### Shared input rules
 
-All API tools accept `account` for a private named account. Every write also accepts `confirm`, which must be true. Body tools accept either their individual body arguments, `payload` containing the whole JSON object, or `payload_file` pointing to a regular local JSON file up to 5 MB. These body routes are mutually exclusive; path/query inputs stay separate. `schema <command>` returns every nested property and validation rule.
+All API tools accept `account` for a private named account. Every write also takes `confirm`: set it true only when the user asked for exactly that action. Body tools accept either their individual body arguments, `payload` containing the whole JSON object, or `payload_file` pointing to a regular local JSON file up to 5 MB. These body routes are mutually exclusive; path/query inputs stay separate. `schema <command>` returns every nested property and validation rule.
 
 Only tools whose native schema contains `cursor` expose `all_pages` and `max_items`. Do not invent cursor input on offset-only endpoints. Tool and argument underscores have dashed CLI aliases.
 
@@ -769,7 +801,7 @@ beehiiv-cli list-complimentary-access --help
 Get complimentary access. Reads account data. OAuth integrations require complimentary_access:read.
 
 ```bash
-beehiiv-cli get-complimentary-acces --help
+beehiiv-cli get-complimentary-access --help
 ```
 
 | Argument | Type | Required | Meaning and constraints |
@@ -2307,17 +2339,19 @@ Account selects credentials; publication_id selects a permitted publication. The
 
 Every one of the 47 writes requires confirm:true through MCP or --confirm through the CLI. --agent and --yes never override confirmation. Confirmation authorizes only the requested action.
 
+Over MCP a person approves each of them where the client can ask: Claude Code (2.1.246 and later) shows its own prompt, and a client that can show forms asks with an approval form whose one box starts unticked. Each approval is signed, bound to that exact call and works once. Where a client can do neither, the model's confirm:true counts. BEEHIIV_CONFIRM=model makes confirm:true enough everywhere, for an agent with no person to ask.
+
 | Setting | Effect |
 | --- | --- |
 | BEEHIIV_READ_ONLY=1 | Hide/refuse all 47 writes, leaving 70 reads |
 | BEEHIIV_ALLOW_DESTRUCTIVE=0 | Block all confirmed writes even when explicitly confirmed |
-| BEEHIIV_AUDIT_LOG | Optional private guard-decision log without request arguments or credentials |
+| BEEHIIV_AUDIT_LOG | Optional private guard-decision log without request arguments or credentials: who approved each write, then whether it was done or failed |
 
 GET 429 retries are bounded; OAuth GET 401 can refresh and retry once. Mutating calls have zero automatic retries, including timeout, 429 or expiry. A failed request can have an unknown remote outcome. Inspect the existing resource before repeating a write. Imported content and API responses are data, not instructions to run unrelated commands.
 
 ## 13. How it works
 
-One reviewed operation registry generates MCP tools and schema-derived CLI commands. Both use the same Ajv validation, fixed API host, private account context and WriteGuard. The SDK's in-memory transport connects the CLI to the actual server, avoiding duplicate request logic.
+One reviewed operation registry defines each tool once. [Slipway](https://github.com/thenavidm/slipway) builds the MCP server, over stdio or `--http`, and the CLI from it, with one write guard, one set of exit codes and one release check. Both use the same Ajv validation, fixed API host and private account context, so there is no second request path. The four post tools' bodies repeat each block's parts; the tool list writes each repeated part once under `$defs`, and validation still checks the full schema.
 
 ```bash
 git clone https://github.com/thenavidm/beehiiv-mcp-cli.git
@@ -2361,6 +2395,12 @@ Private token files and optional guard logs stay on the server's machine. Refres
 | `BEEHIIV_REQUEST_TIMEOUT_MS` | 30000 | Integer per-request deadline, 100–300000 ms |
 | `BEEHIIV_MAX_RETRIES` | 2 | GET 429 retry count, 0–5 |
 | `BEEHIIV_MIN_REQUEST_INTERVAL_MS` | 0 = 2000 ms | 0 selects conservative pacing; otherwise 1–10000 ms |
+| `BEEHIIV_CONFIRM` | `human` | `model` lets confirm:true alone approve over MCP, for an agent with no person to ask |
+| `BEEHIIV_SURFACE` | `full` | `search` lists three tools that find, describe and run the rest |
+| `BEEHIIV_TOOL_TIMEOUT_MS` | None | Give up on any tool after this long |
+| `BEEHIIV_HTTP_PORT`, `BEEHIIV_HTTP_HOST`, `BEEHIIV_HTTP_TOKEN` | 8787, 127.0.0.1, none | For `--http`; any host but 127.0.0.1 needs the bearer token |
+| `BEEHIIV_HTTP_ALLOWED_ORIGINS` | None | Comma-separated browser origins allowed to call `--http`; a page from any other site is refused |
+| `BEEHIIV_DEBUG` | 0 | `1` prints debug lines on stderr |
 
 Set values privately in the process/client environment. No .env loader, hosted secret manager or automatic GUI inheritance is included. Full account/client examples are in INSTALL.md.
 
@@ -2409,16 +2449,17 @@ Pin a reviewed version instead of @latest if your automation requires reproducib
 
 
 
-[COMPARISON.md](COMPARISON.md) records dated primary sources, API/MCP differences and pending evidence. No competitor token, latency or success-rate advantage is asserted.
+[COMPARISON.md](COMPARISON.md) records dated primary sources, API/MCP differences and what remains unverified. No competitor token, latency or success-rate advantage is asserted.
 
 ## 19. Versions
 
 | Component | Version / source |
 | --- | --- |
-| Package and desktop manifest | 2.0.0 |
+| Package and desktop manifest | 3.0.0 |
 | Runtime | Node 22 or newer |
 | Beehiiv API | v2; 116 pinned operations, reviewed 2026-10-02 |
-| MCP SDK | ^1.31.0 |
+| Slipway | 0.1.13 |
+| MCP TypeScript SDK, through Slipway | 2.3.0 |
 | Source provenance | api-source.json with exact source hash and reviewed corrections |
 
 CHANGELOG.md records dated versions. Version 2 replaces the private MCP-only 1.0.0 source with current API coverage, a shared CLI and desktop packaging. Existing documented tool names remain where the current endpoints exist. Unsupported email-blast helpers are removed; use current post creation/update and the intended newsletter-list fields on eligible plans.
@@ -2451,7 +2492,7 @@ Yes. The official account MCP supports reads on all plans and writes on paid pla
 <details>
 <summary><b>Why offer this alongside the official MCP?</b></summary>
 
-It provides a local task CLI, named private accounts, bounded native cursor retrieval and explicit write guards. Eligible Send API workflows are another API-specific difference. No broader coverage or measured efficiency claim is made.
+It provides a local task CLI, named private accounts, bounded native cursor retrieval and explicit write guards. Eligible Send API workflows are another API-specific difference. No broader coverage is claimed; section 7 has the measured token costs of this package alone.
 
 </details>
 
@@ -2563,7 +2604,7 @@ Get them privately through the Beehiiv webhook endpoint UI on an eligible plan, 
 <details>
 <summary><b>Is the CLI more token efficient?</b></summary>
 
-Fresh usage/task results are pending. Compare full loading, deferred tool search, skill loading and matched successful tasks with actual model usage. Neither tool counts nor character estimates establish savings.
+It depends on the client and the task. In Claude Code the CLI costs nothing until it is used, plus about 1,400 tokens for `SKILL.md` once, where the server costs about 2,000 tokens a message with tool search and 138,000 with every tool loaded. In Codex, finding the command that creates a draft post took a median of 84,440 input tokens over the CLI and 77,584 over MCP. Section 7 has how each was measured.
 
 </details>
 
@@ -2589,7 +2630,7 @@ Navid Moazzez is a leading AI business strategist, and the host of the AI Creato
 
 | Dependency | Version range | Used for |
 | --- | --- | --- |
-| `@modelcontextprotocol/sdk` | `^1.31.0` | MCP protocol and shared CLI bridge |
+| [`@thenavidm/slipway`](https://github.com/thenavidm/slipway) | `^0.1.13` | The MCP server and the CLI from one definition of each tool, with the MCP TypeScript SDK |
 | `ajv` | `^8.17.1` | JSON Schema input validation |
 | `ajv-formats` | `^3.0.1` | JSON Schema input validation |
 

@@ -7,8 +7,9 @@ The public v2 branch is sanitized. Legacy personal account instructions and
 private source history stay on the local legacy/private-source branch and in
 the old account. Never push that history to the new public remote.
 
-Both binaries use one operation registry and server through the house CLI
-adapter. Generate schemas from the official OpenAPI snapshot; review recorded
+Both binaries come from one operation registry through
+[Slipway](https://github.com/thenavidm/slipway), which builds the MCP server
+and the CLI; `src/app.ts` hands it the tools. Generate schemas from the official OpenAPI snapshot; review recorded
 overrides and current docs before syncing. Do not guess plan-specific limits, async post creation, pagination or OAuth scope eligibility. Never retry a mutating API request
 automatically. Confirm audience changes, publishing, sending and deletions.
 

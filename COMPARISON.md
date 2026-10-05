@@ -36,7 +36,7 @@ Webhook management is available on eligible Lite+ accounts. Retrieve signing sec
 
 ## Evidence and future benchmarks
 
-Local build/typecheck, 29 controlled HTTP/shared-CLI checks and actual stdio discovery have passed. Fixture tests validate construction, guards, retry policy, form-encoded refresh and pending post responses. They do not establish live account success or sending eligibility. Public npm, desktop GUI, hosted official MCP handshakes and matched token/task benchmarks are not yet completed for this integration.
+Local build/typecheck, 31 tests and actual stdio discovery have passed. Fixture tests validate construction, guards, retry policy, form-encoded refresh and pending post responses. They do not establish live account success or sending eligibility. Public npm, desktop GUI and hosted official MCP handshakes are not yet completed for this integration. README section 7 has this package's own token costs, measured in Claude Code and Codex against 2.0.1; no other offering was measured.
 
 Compare the same authorized publication task with our CLI, our MCP, the official account MCP and the community CLI when that task is supported. Fix client/model/package versions, date, loading mode, account, requested output fields and completion criteria. Report actual API input/output/cache usage and latency, separating schema loading from full task cost. Never use character-count estimates or an unmatched tool-count comparison as a token savings percentage.
 
